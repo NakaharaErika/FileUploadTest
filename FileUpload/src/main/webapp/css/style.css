@@ -1,0 +1,7 @@
+
+/* 画像のサイズを制限 */
+.image-preview {
+    max-width: 300px; /* 最大幅 */
+    max-height: 300px; /* 最大高さ */
+    display: none; /* 初期状態では非表示 */
+}
