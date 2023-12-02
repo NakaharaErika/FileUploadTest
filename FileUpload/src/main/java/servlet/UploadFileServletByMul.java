@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
+import response.UploadResponse;
 import service.UploadFileByMul;
 
 @WebServlet("/upload_file")
@@ -36,20 +37,17 @@ public class UploadFileServletByMul extends HttpServlet {
         String getparam = request.getParameter("getparam");
         int animalId = Integer.parseInt(request.getParameter("animalId"));
         List<Part> parts = new ArrayList<>();
-        //ここでif文使っちゃうけど、次のメソッドでnullチェックするのでOK
+        String validationMessage = null;
         for (int i = 1; i <= MAX_IMAGES; i++) {
-            Part imgPart = request.getPart("img" + i);
-            if (imgPart != null && imgPart.getSize() > 0) {
-                parts.add(imgPart);
-            }
+            parts.add(request.getPart("img" + i));
         }
-       
-        //リストをDBに登録し、プロジェクト内にも保存するメソッド
-        String message = UploadFileByMul.processImageUpload(animalId, parts);
 
+        // UploadFileByMulに処理を飛ばす
+        UploadResponse uploadResponse = UploadFileByMul.handleUploadRequest(animalId, parts);
 
-        request.setAttribute("message", message);
-        String view = "/WEB-INF/views/uploadFile.jsp";
-        request.getRequestDispatcher(view).forward(request, response);  
+        // 結果に基づいて応答を設定
+        request.setAttribute("parts", uploadResponse.getMessage());
+        request.setAttribute("message", uploadResponse.getMessage());
+        request.getRequestDispatcher(uploadResponse.getView()).forward(request, response);
     }
 }

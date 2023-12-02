@@ -1,6 +1,7 @@
 package service;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -10,8 +11,50 @@ import java.util.List;
 import dao.DBConnection;
 import dao.WorkDaoJDBC;
 import jakarta.servlet.http.Part;
+import response.UploadResponse;
 
 public class UploadFileByMul {
+	
+	private static final int MAX_FILE_SIZE = 2 * 1024 * 1024;
+	
+	public static UploadResponse handleUploadRequest(int animalId, List<Part> parts) {
+		String view = "/WEB-INF/views/uploadFile.jsp";
+		String message = "写真を登録しました";
+        // 中身が空じゃないかチェック
+		if (parts.isEmpty()) {
+			message = "写真をアップロードしてください";
+			return new UploadResponse(message, view);
+        }
+		// 拡張子・サイズチェック
+		for (Part part : parts) {
+			if(!isJpgFile(part)) {
+				message = "ファイルはJPG形式である必要があります。";
+				return new UploadResponse(message, view);
+			}
+			if(!isValidSize(part)) {
+				message = "ファイルサイズは2MB以下である必要があります。";
+				return new UploadResponse(message, view);
+			}
+		}
+		
+        // ...
+		
+        // 結果を格納する新しいクラス（UploadResponse）のインスタンスを返却
+		return new UploadResponse(message, view);
+    }
+	
+	//拡張子確認
+    private static boolean isJpgFile(Part filePart) {
+        String submittedFileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+        String fileExt = submittedFileName.substring(submittedFileName.lastIndexOf(".") + 1).toLowerCase();
+        return fileExt.equals("jpg") || fileExt.equals("jpeg");
+    }
+    //ファイルサイズ確認
+    private static boolean isValidSize(Part filePart) {
+        return filePart.getSize() <= MAX_FILE_SIZE;
+    }
+	
+	
 	public static String processImageUpload(int animalId, List<Part> parts) {
         if (parts.isEmpty()) {
             return "写真をアップロードしてください";
