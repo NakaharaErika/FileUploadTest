@@ -25,8 +25,11 @@ public class UploadFileByMul {
 			message = "写真をアップロードしてください";
 			return new UploadResponse(message, view);
         }
-		// 拡張子・サイズチェック
+		// 空値除去・拡張子・サイズチェック
 		for (Part part : parts) {
+			if (part == null || part.getSubmittedFileName().isEmpty()) {
+                continue; // 空のPartをスキップ
+            }
 			if(!isJpgFile(part)) {
 				message = "ファイルはJPG形式である必要があります。";
 				return new UploadResponse(message, view);
@@ -37,7 +40,20 @@ public class UploadFileByMul {
 			}
 		}
 		
-        // ...
+		//両方のチェックが完了したので、写真を登録
+		for (Part part : parts) {
+			if (part == null ||  part.getSubmittedFileName().isEmpty()) {
+	            continue;
+	        }
+			//最新の番号をDBから取得
+            int nextPhotoId = getLatestNum(animalId);
+            //ファイル名を決定
+            String imgName = setNextName(nextPhotoId, animalId);
+            //プロジェクト内にファイルを保存
+            fileUpload(part, imgName);
+            //DBにファイルを登録
+            registerPhoto(nextPhotoId, animalId, imgName);
+        }
 		
         // 結果を格納する新しいクラス（UploadResponse）のインスタンスを返却
 		return new UploadResponse(message, view);
@@ -54,22 +70,7 @@ public class UploadFileByMul {
         return filePart.getSize() <= MAX_FILE_SIZE;
     }
 	
-	
-	public static String processImageUpload(int animalId, List<Part> parts) {
-        if (parts.isEmpty()) {
-            return "写真をアップロードしてください";
-        }
-
-        for (Part part : parts) {
-            int nextPhotoId = getLatestNum(animalId);
-            String imgName = setNextName(nextPhotoId, animalId);
-            fileUpload(part, imgName);
-            registerPhoto(nextPhotoId, animalId, imgName);
-        }
-        return "写真を登録しました";
-    }
-
-		
+    //最新番号を探索してインクリメントして返却
 	public static Integer getLatestNum(int animalId) {
 		if(animalId <= 0) {
 			return null;
@@ -111,9 +112,6 @@ public class UploadFileByMul {
 	
 	//画像をプロジェクト内に格納(jpgに変換)
 	public static void fileUpload(Part part,String imgName) {
-		if (part == null || "".equals(part.getSubmittedFileName())) {
-            return;
-        }
 		 try {
 		    // フルパスじゃないと上手く読み込まれないみたい
 		    String filePath = "/Users/nakahara.erika/git/FileUploadTest/FileUpload/src/main/webapp/upload/" + imgName + ".jpg";

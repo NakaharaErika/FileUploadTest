@@ -20,7 +20,7 @@ public class UploadFileServletByMul extends HttpServlet {
     private static final int MAX_IMAGES = 2;
     //ECサイトの商品ページに写真を登録したい
     //管理者が商品登録・編集時に商品idを渡して管理できる
-    //極力if文をサーブレット内で使わない
+    //Junitテストのために、全力でif文を使わない(Beans化)
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -37,7 +37,7 @@ public class UploadFileServletByMul extends HttpServlet {
         String getparam = request.getParameter("getparam");
         int animalId = Integer.parseInt(request.getParameter("animalId"));
         List<Part> parts = new ArrayList<>();
-        String validationMessage = null;
+        
         for (int i = 1; i <= MAX_IMAGES; i++) {
             parts.add(request.getPart("img" + i));
         }
@@ -46,7 +46,6 @@ public class UploadFileServletByMul extends HttpServlet {
         UploadResponse uploadResponse = UploadFileByMul.handleUploadRequest(animalId, parts);
 
         // 結果に基づいて応答を設定
-        request.setAttribute("parts", uploadResponse.getMessage());
         request.setAttribute("message", uploadResponse.getMessage());
         request.getRequestDispatcher(uploadResponse.getView()).forward(request, response);
     }
